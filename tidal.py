@@ -1,15 +1,13 @@
-#                   █   █ █ █ ▀▄▀ █▀█ █▀█ ▄▄█ █▀▀
-#                   ▀▄▀▄▀ █▀█  █  █▀▀ █▄█ █▄█ █▄█ ▄
-#                         © Copyright 2023
+#          █  █ █▄ █ █▄ █ █▀▀ ▀▄▀ █▀█ █▄ █
+#          ▀▄▄▀ █ ▀█ █ ▀█ ██▄  █  █▄█ █ ▀█ ▄
+#                © Copyright 2024
 #
-#                      👤 https://t.me/whypodg
+#            👤 https://t.me/unneyon
 #
-# 🔑 Code is licensed under GNU General Public License v3.0 unless otherwise specified.
-# 🔒 You CANNOT edit this file without direct permission from the author.
-# 🔓 You can redistribute this file without any changes.
-# 🌐 https://www.gnu.org/licenses/gpl-3.0.html
+# 🔒 Licensed under the GNU GPLv3
+# 🌐 https://www.gnu.org/licenses/agpl-3.0.html
 
-# meta developer: @whypodg
+# meta developer: @unneyon
 # scope: hikka_only
 # scope: hikka_min 1.6.3
 # requires: git+https://github.com/tamland/python-tidal
