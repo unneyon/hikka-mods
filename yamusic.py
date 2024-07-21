@@ -42,7 +42,8 @@ class YaMusic(loader.Module):
         "queue_types": {
             "VARIOUS": "Your queue",
             "RADIO": "«My Wave»",
-            "PLAYLIST": "playlist «{}»"
+            "PLAYLIST": "playlist «{name}»",
+            "ALBUM": "album «{name}»"
         },
         "now": "<emoji document_id=5438616889632761336>🎧</emoji> <b>{title} — {performer}</b>\n\n" \
                "<emoji document_id=5407025283456835913>📱</emoji> <b>Now is listening on</b> <code>{device}" \
@@ -72,7 +73,8 @@ class YaMusic(loader.Module):
         "queue_types": {
             "VARIOUS": "Ваша очередь",
             "RADIO": "«Моя Волна»",
-            "PLAYLIST": "плейлист «{name}»"
+            "PLAYLIST": "плейлист «{name}»",
+            "ALBUM": "альбом «{name}»"
         },
         "now": "<emoji document_id=5438616889632761336>🎧</emoji> <b>{title} — {performer}</b>\n\n" \
                "<emoji document_id=5407025283456835913>📱</emoji> <b>Сейчас слушаю на</b> <code>{device}" \
@@ -282,6 +284,15 @@ class YaMusic(loader.Module):
                 playlist_name = f"<b><a href=\"https://music.yandex.ru/users/" \
                                 f"{self.ym_client.me.account.login}/playlists/" \
                                 f"{playlist_id.split(':')[1]}\">{playlist[0].title}</a></b>"
+        if playing_from == "ALBUM":
+            album_id = ynison.get("player_state", {}).get("player_queue", {}).get(
+                "entity_id",
+                f"{self.ym_client.me.account.uid}:3"
+            )
+            album = self.ym_client.albums(album_id)
+            if len(album) > 0:
+                playlist_name = f"<b><a href=\"https://music.yandex.ru/album/{album[0]['id']}>" \
+                                f"{album[0]['title']}</a></b>"
 
         out = self.strings("now").format(
             title=track_info[0].title,
@@ -329,7 +340,7 @@ class YaMusic(loader.Module):
         message = await utils.answer(message, self.strings("searching"))
 
         search = self.ym_client.search(query, type_="track")
-        if len(search.tracks.results) == 0:
+        if (not search.tracks) or (len(search.tracks.results) == 0):
             return await utils.answer(message, self.strings("404"))
 
         out = self.strings("search").format(
