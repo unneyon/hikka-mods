@@ -42,15 +42,15 @@ class YaMusic(loader.Module):
         "queue_types": {
             "VARIOUS": "Your queue",
             "RADIO": "«My Wave»",
-            "PLAYLIST": "playlist «{name}»",
-            "ALBUM": "album «{name}»"
+            "PLAYLIST": "Playlist «{}»",
+            "ALBUM": "Album «{}»"
         },
         "now": "<emoji document_id=5438616889632761336>🎧</emoji> <b>{title} — {performer}</b>\n\n" \
                "<emoji document_id=5407025283456835913>📱</emoji> <b>Now is listening on</b> <code>{device}" \
                "</code>\n" \
                "<emoji document_id=5431736674147114227>🗂</emoji> <b>Playing from:</b> {playing_from}\n\n" \
                "<emoji document_id=5429189857324841688>🎵</emoji> <a href=\"https://music.yandex.ru/" \
-               "album/{}/track/{track_id}\"><b>Yandex.Music</b></a>",
+               "album/{album_id}/track/{track_id}\"><b>Yandex.Music</b></a>",
         "search": "<emoji document_id=5438616889632761336>🎧</emoji> <b>{title} — {performer}</b>\n" \
                "<emoji document_id=5429189857324841688>🎵</emoji> <a href=\"https://music.yandex.ru/" \
                "album/{album_id}/track/{track_id}\"><b>Yandex.Music</b></a>",
@@ -73,13 +73,13 @@ class YaMusic(loader.Module):
         "queue_types": {
             "VARIOUS": "Ваша очередь",
             "RADIO": "«Моя Волна»",
-            "PLAYLIST": "плейлист «{name}»",
-            "ALBUM": "альбом «{name}»"
+            "PLAYLIST": "Плейлист «{}»",
+            "ALBUM": "Альбом «{}»"
         },
         "now": "<emoji document_id=5438616889632761336>🎧</emoji> <b>{title} — {performer}</b>\n\n" \
                "<emoji document_id=5407025283456835913>📱</emoji> <b>Сейчас слушаю на</b> <code>{device}" \
                "</code>\n" \
-               "<emoji document_id=5431736674147114227>🗂</emoji> <b>Откуда играет:</b> {playing_from}\n\n" \
+               "<emoji document_id=5431736674147114227>🗂</emoji> <b>Откуда грает:</b> {playing_from}\n\n" \
                "<emoji document_id=5429189857324841688>🎵</emoji> <a href=\"https://music.yandex.ru/" \
                "album/{album_id}/track/{track_id}\"><b>Яндекс.Музыка</b></a>",
         "search": "<emoji document_id=5438616889632761336>🎧</emoji> <b>{title} — {performer}</b>\n" \
@@ -284,23 +284,25 @@ class YaMusic(loader.Module):
                 playlist_name = f"<b><a href=\"https://music.yandex.ru/users/" \
                                 f"{self.ym_client.me.account.login}/playlists/" \
                                 f"{playlist_id.split(':')[1]}\">{playlist[0].title}</a></b>"
-        if playing_from == "ALBUM":
+        elif playing_from == "ALBUM":
             album_id = ynison.get("player_state", {}).get("player_queue", {}).get(
-                "entity_id",
-                f"{self.ym_client.me.account.uid}:3"
+                "entity_id"
             )
             album = self.ym_client.albums(album_id)
             if len(album) > 0:
-                playlist_name = f"<b><a href=\"https://music.yandex.ru/album/{album[0].id}>" \
+                logger.error(album)
+                playlist_name = f"<b><a href=\"https://music.yandex.ru/album/{album[0].id}\">" \
                                 f"{album[0].title}</a></b>"
+                logger.error(playlist_name)
 
         out = self.strings("now").format(
             title=track_info[0].title,
             performer=", ".join([x.name for x in track_info[0].artists]),
             device=device,
-            playing_from=self.strings("queue_types").get(playing_from).format(name=playlist_name),
+            playing_from=self.strings("queue_types").get(playing_from, "RADIO").format(playlist_name),
             album_id=track_info[0].albums[0].id, track_id=track_info[0].id
         )
+        logger.error(out)
         message = await utils.answer(message, out+self.strings("downloading"))
 
         info = self.ym_client.tracks_download_info(track_info[0].id, True)
