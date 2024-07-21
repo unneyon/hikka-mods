@@ -291,8 +291,8 @@ class YaMusic(loader.Module):
             )
             album = self.ym_client.albums(album_id)
             if len(album) > 0:
-                playlist_name = f"<b><a href=\"https://music.yandex.ru/album/{album[0]['id']}>" \
-                                f"{album[0]['title']}</a></b>"
+                playlist_name = f"<b><a href=\"https://music.yandex.ru/album/{album[0].id}>" \
+                                f"{album[0].title}</a></b>"
 
         out = self.strings("now").format(
             title=track_info[0].title,
