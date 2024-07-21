@@ -159,7 +159,6 @@ class TidalMod(loader.Module):
 					),
 					loop=outer_loop,
 				)
-				self._save_session_info()
 				self.set("token_type", tidal_session.token_type)
 				self.set("session_id", tidal_session.session_id)
 				self.set("access_token", tidal_session.access_token)
