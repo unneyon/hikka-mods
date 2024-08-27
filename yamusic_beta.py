@@ -37,7 +37,7 @@ class YaMusicMod(loader.Module):
     """The module for Yandex.Music streaming service [BETA]"""
 
     strings = {
-        "name": "YaMusic [BETA]",
+        "name": "YaMusic",
         "no_token": "<emoji document_id=5312526098750252863>❌</emoji> <b>You didn't specify the access token in the config!</b>",
         "autobio_e": "<emoji document_id=5429189857324841688>🎧</emoji> <b>Autobio is on now</b>",
         "autobio_d": "<emoji document_id=5429189857324841688>🎧</emoji> <b>Autobio is off now</b>",
