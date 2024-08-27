@@ -1,2 +1,3 @@
 tidal
 yamusic
+yamusic_beta
