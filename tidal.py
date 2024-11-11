@@ -80,8 +80,8 @@ class TidalMod(loader.Module):
         self.tags_files = {
             "Low (96kbps)": "mp3",
             "Low (320kbps)": "mp3",
-            "High": "m4a"
-            "HiFi": "flac"
+            "High": "m4a",
+            "HiFi": "flac",
             "Max": "flac"
         }
         self.config = loader.ModuleConfig(
