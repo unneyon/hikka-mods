@@ -1,4 +1,4 @@
-__version__ = (1, 0, 0)
+__version__ = (1, 0, 2)
 #          █  █ █▄ █ █▄ █ █▀▀ ▀▄▀ █▀█ █▄ █
 #          ▀▄▄▀ █ ▀█ █ ▀█ ██▄  █  █▄█ █ ▀█ ▄
 #                © Copyright 2024
@@ -18,6 +18,7 @@ import base64
 import io
 import json
 import logging
+import re
 import requests
 
 import tidalapi
@@ -44,7 +45,7 @@ class TidalMod(loader.Module):
         "oauth_btn": "🔑 Login",
         "success": "✅ <b>Successfully logged in!</b>",
         "error": "❌ <b>Error logging in</b>",
-        "search": "<emoji document_id=5370924494196056357>🖤</emoji> <b>{name}</b>\n<emoji document_id=6334768915524093741>⏰</emoji> <b>Release date (in Tidal):</b> <i>{release}</i>",
+        "search": "<emoji document_id=5438616889632761336>🎧</emoji> <b>{artist} — {title}</b>\n<emoji document_id=5359582743992737342>🎵</emoji> <b><a href=\"https://tidal.com/track/{track_id}\">TIDAL</a> | <a href=\"https://song.link/t/{track_id}\">song.link</a></b>",
         "downloading_file": "\n\n<emoji document_id=5325617665874600234>🕔</emoji> <i>Downloading audio…</i>",
         "searching": "<emoji document_id=5309965701241379366>🔍</emoji> <b>Searching…</b>",
         "auth_first": "<emoji document_id=5312526098750252863>❌</emoji> <b>You need to login first</b>",
@@ -61,7 +62,7 @@ class TidalMod(loader.Module):
         "oauth_btn": "🔑 Авторизоваться",
         "success": "✅ <b>Успешно авторизованы!</b>",
         "error": "❌ <b>Ошибка авторизации</b>",
-        "search": "<emoji document_id=5370924494196056357>🖤</emoji> <b>{name}</b>\n<emoji document_id=6334768915524093741>⏰</emoji> <b>Дата релиза (в Tidal):</b> <i>{release}</i>",
+        "search": "<emoji document_id=5438616889632761336>🎧</emoji> <b>{artist} — {title}</b>\n<emoji document_id=5359582743992737342>🎵</emoji> <b><a href=\"https://tidal.com/track/{track_id}\">TIDAL</a> | <a href=\"https://song.link/t/{track_id}\">song.link</a></b>",
         "downloading_file": "\n\n<emoji document_id=5325617665874600234>🕔</emoji> <i>Загрузка аудио…</i>",
         "searching": "<emoji document_id=5309965701241379366>🔍</emoji> <b>Ищем…</b>",
         "auth_first": "<emoji document_id=5312526098750252863>❌</emoji> <b>Сначала нужно авторизоваться</b>",
@@ -116,10 +117,12 @@ class TidalMod(loader.Module):
 
 
     @loader.command(
-        ru_doc="Авторизация в TIDAL"
+        ru_doc="Авторизация в TIDAL",
+        alias="tauth"
     )
-    async def tlogincmd(self, message: types.Message):
+    async def tlogin(self, message: types.Message):
         """Open OAuth window to login into TIDAL"""
+
         tidal_session = self.tidalLogin()
         result, future = tidal_session.login_oauth()
         form = await self.inline.form(
@@ -161,10 +164,11 @@ class TidalMod(loader.Module):
 
 
     @loader.command(
-        ru_doc="<запрос> - Поиск трека в TIDAL"
+        ru_doc="<запрос> - Поиск трека в TIDAL",
+        alias="tq"
     )
-    async def tidalcmd(self, message: types.Message):
-        """<query> - Search TIDAL"""
+    async def tidal(self, message: types.Message):
+        """<query> - Search track in TIDAL"""
 
         tidal_session = self.tidalLogin()
         if not await utils.run_sync(tidal_session.check_login):
@@ -197,11 +201,9 @@ class TidalMod(loader.Module):
             )
         ).json()
 
-        artists = track_res['artists']
         for i in meta["artists"]:
-            if i['name'] not in artists:
-                artists.append(i['name'])
-        full_name = f"{', '.join(artists)} - {track_res['name']}"
+            if i['name'] not in track_res['artists']:
+                track_res['artists'].append(i['name'])
 
         tags = track_res['tags']
         if meta.get("explicit"):
@@ -213,10 +215,9 @@ class TidalMod(loader.Module):
             track_res['tags'] = tags
 
         text = self.strings("search").format(
-            name=utils.escape_html(full_name),
-            release=track.tidal_release_date.strftime(
-                "%d.%m.%Y"
-            )
+            artist=", ".join(track_res['artists']),
+            title=track_res['name'],
+            track_id=track_res['id']
         )
         message = await utils.answer(
             message, text + self.strings("downloading_file")
@@ -243,9 +244,6 @@ class TidalMod(loader.Module):
             audio.seek(0)
 
         text += f"\n\n{', '.join(track_res['tags'])}"
-        text += f"\n\n<emoji document_id=5359582743992737342>🎵</emoji> " \
-                f"<b><a href='https://tidal.com/browse/track/{track_res['id']}'>Tidal</a></b>"
-
         await utils.answer_file(
             message, audio, text,
             attributes=([
@@ -255,4 +253,98 @@ class TidalMod(loader.Module):
                     performer=', '.join(track_res['artists'])
                 )
             ])
+        ) 
+
+
+    @loader.command(
+        ru_doc="<ID/ссылка> - Поиск трека в TIDAL по ID или ссылке",
+        alias="tid"
+    )
+    async def turl(self, message: types.Message):
+        """<ID/url> - Search track in TIDAL by ID or url"""
+
+        tidal_session = self.tidalLogin()
+        if not await utils.run_sync(tidal_session.check_login):
+            await utils.answer(message, self.strings("auth_first"))
+            return
+
+        args = utils.get_args(message)
+        if (not args):
+            return await utils.answer(message, self.strings("args"))
+        res = re.findall(r"tidal\.com\/(?:track|browse\/track)\/(\d+)", args[0])
+        if (not res) and (not args[0].isdigit()):
+            return await utils.answer(message, self.strings("args"))
+
+        message = await utils.answer(message, self.strings("searching"))
+
+        try:
+            track = tidal_session.track(int(args[0]) if args[0].isdigit() else int(res[0]))
+        except tidalapi.exceptions.ObjectNotFound:
+            return await utils.answer(message, self.strings("404"))
+
+        track_res = {
+            "url": None, "id": track.id,
+            "artists": [], "name": track.name,
+            "tags": [], "duration": track.duration
+        }
+
+        meta = (
+            tidal_session.request.request(
+                "GET",
+                f"tracks/{track_res['id']}",
+            )
+        ).json()
+
+        for i in meta["artists"]:
+            if i['name'] not in track_res['artists']:
+                track_res['artists'].append(i['name'])
+
+        tags = track_res['tags']
+        if meta.get("explicit"):
+            tags += ["#explicit🤬"]
+        if isinstance(meta.get("audioModes"), list):
+            for tag in meta["audioModes"]:
+                tags += [f"#{tag}🎧"]
+        if tags:
+            track_res['tags'] = tags
+
+        text = self.strings("search").format(
+            artist=", ".join(track_res['artists']),
+            title=track_res['name'],
+            track_id=track_res['id']
         )
+        message = await utils.answer(
+            message, text + self.strings("downloading_file")
+        )
+
+        q = self.qualities.get(self.config['quality'], "HIGH")
+        q = q.value if type(q) != str else q
+        t = tidal_session.request.request(
+            "GET",
+            f"tracks/{track_res['id']}/playbackinfopostpaywall",
+            {
+                "audioquality": q,
+                "playbackmode": "STREAM",
+                "assetpresentation": "FULL"
+            }
+        ).json()
+        man = json.loads(base64.b64decode(t['manifest']).decode('utf-8'))
+        track_res['url'] = man['urls'][0]
+        track_res['tags'].append(f"#{q}🔈")
+
+        with requests.get(track_res['url']) as r:
+            audio = io.BytesIO(r.content)
+            audio.name = f"audio.{self.tags_files.get(self.config['quality'], 'mp3')}"
+            audio.seek(0)
+
+        text += f"\n\n{', '.join(track_res['tags'])}"
+        await utils.answer_file(
+            message, audio, text,
+            attributes=([
+                types.DocumentAttributeAudio(
+                    duration=track_res['duration'],
+                    title=track_res['name'],
+                    performer=', '.join(track_res['artists'])
+                )
+            ])
+    )
