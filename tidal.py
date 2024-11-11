@@ -71,25 +71,25 @@ class TidalMod(loader.Module):
 
     def __init__(self):
         self.qualities = {
-            "Low": tidalapi.Quality.low_96k,
-            "High": tidalapi.Quality.low_320k,
-            "HiFi": tidalapi.Quality.high_lossless,
-            "HiFi+": tidalapi.Quality.hi_res,
-            "Master": tidalapi.Quality.hi_res_lossless
+            "Low (96kbps)": tidalapi.Quality.low_96k,
+            "Low (320kbps)": tidalapi.Quality.low_320k,
+            "High": tidalapi.Quality.high_lossless,
+            "HiFi": tidalapi.Quality.hi_res,
+            "Max": tidalapi.Quality.hi_res_lossless
         }
         self.tags_files = {
-            "Low": "mp3",
-            "High": "m4a",
-            "HiFi": "flac",
-            "HiFi+": "flac",
-            "Master": "flac"
+            "Low (96kbps)": "mp3",
+            "Low (320kbps)": "mp3",
+            "High": "m4a"
+            "HiFi": "flac"
+            "Max": "flac"
         }
         self.config = loader.ModuleConfig(
             loader.ConfigValue(
                 "quality",
                 "HiFi",
                 lambda: self.strings["_cfg_quality"],
-                validator=loader.validators.Choice(["Low", "High", "HiFi", "HiFi+", "Master"]),
+                validator=loader.validators.Choice(['Low (96kbps)', 'Low (320kbps)', 'High', 'HiFi', 'Max']),
             )
         )
 
