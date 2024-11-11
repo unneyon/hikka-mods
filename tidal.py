@@ -74,14 +74,12 @@ class TidalMod(loader.Module):
             "Low (96kbps)": tidalapi.Quality.low_96k,
             "Low (320kbps)": tidalapi.Quality.low_320k,
             "High": tidalapi.Quality.high_lossless,
-            "HiFi": tidalapi.Quality.hi_res,
             "Max": tidalapi.Quality.hi_res_lossless
         }
         self.tags_files = {
             "Low (96kbps)": "mp3",
             "Low (320kbps)": "mp3",
             "High": "m4a",
-            "HiFi": "flac",
             "Max": "flac"
         }
         self.config = loader.ModuleConfig(
