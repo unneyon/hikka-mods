@@ -87,7 +87,7 @@ class TidalMod(loader.Module):
                 "quality",
                 "HiFi",
                 lambda: self.strings["_cfg_quality"],
-                validator=loader.validators.Choice(['Low (96kbps)', 'Low (320kbps)', 'High', 'HiFi', 'Max']),
+                validator=loader.validators.Choice(['Low (96kbps)', 'Low (320kbps)', 'High', 'Max']),
             )
         )
 
