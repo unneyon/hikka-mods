@@ -141,7 +141,7 @@ class TidalMod(loader.Module):
                 asyncio.ensure_future(
                     form.edit(
                         self.strings("success"),
-                        gif="https://c.tenor.com/IrKex2lXvR8AAAAC/sparkly-eyes-joy.gif",
+                        gif="https://x0.at/dg3A.mp4",
                     ),
                     loop=outer_loop,
                 )
